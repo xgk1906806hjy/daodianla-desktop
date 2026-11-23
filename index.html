@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>到点啦 · 打工人快乐仪表盘</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="titlebar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><circle cx="16" cy="17" r="11"></circle><path d="M16 11v6l4 2M11 4l-3 3M21 4l3 3M10 27l-2 2M22 27l2 2"></path><path class="smile" d="M12 19c1 2 7 2 8 0"></path></svg>
+      </span>
+      <strong>到点啦</strong>
+      <span class="brand-tag">打工人快乐仪表盘</span>
+    </div>
+    <div class="window-actions">
+      <button id="pinBtn" class="icon-button" title="窗口置顶" aria-label="窗口置顶">
+        <svg viewBox="0 0 24 24"><path d="M8 3h8l-1 5 3 3v2h-5v7l-1 1-1-1v-7H6v-2l3-3-1-5z"></path></svg>
+      </button>
+      <button id="settingsBtn" class="icon-button" title="个性化设置" aria-label="个性化设置">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19 13.5v-3l-2-.7a7 7 0 0 0-.8-1.8l.9-1.9L15 4l-1.9.9a7 7 0 0 0-1.8-.8L10.5 2h-3l-.7 2a7 7 0 0 0-1.8.8L3.1 4 1 6.1 1.9 8a7 7 0 0 0-.8 1.8l-2 .7v3l2 .7a7 7 0 0 0 .8 1.8l-.9 1.9L3.1 20l1.9-.9a7 7 0 0 0 1.8.8l.7 2h3l.7-2a7 7 0 0 0 1.8-.8l1.9.9 2.1-2.1-.9-1.9a7 7 0 0 0 .8-1.8l2-.7z" transform="translate(1 0) scale(.92)"></path></svg>
+      </button>
+      <span class="action-divider"></span>
+      <button id="minimizeBtn" class="icon-button window-button" title="最小化" aria-label="最小化"><svg viewBox="0 0 24 24"><path d="M5 12h14"></path></svg></button>
+      <button id="maximizeBtn" class="icon-button window-button" title="最大化" aria-label="最大化"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1"></rect></svg></button>
+      <button id="closeBtn" class="icon-button window-button close-button" title="关闭" aria-label="关闭"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="welcome-row">
+      <div>
+        <p id="dateLine" class="date-line">今天</p>
+        <h1><span id="greeting">下午好</span>，今天也在认真生活。</h1>
+      </div>
+      <div class="week-widget">
+        <div class="week-widget-label"><span>本周打工进度</span><strong id="weekProgressText">0 / 5 天</strong></div>
+        <div id="weekDots" class="week-dots"></div>
+      </div>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="card offwork-card">
+        <div class="card-heading">
+          <div class="heading-left">
+            <span class="feature-icon orange-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l3 2M9 3h6"></path></svg>
+            </span>
+            <h2>下班倒计时</h2>
+          </div>
+          <span id="workStatus" class="status-pill">搬砖进行中</span>
+        </div>
+
+        <div class="offwork-main">
+          <p id="countdownHint" class="countdown-hint">距离今天下班</p>
+          <div id="countdown" class="countdown" aria-live="off"></div>
+          <div class="progress-meta"><span>今日打工进度</span><strong id="workProgressText">0%</strong></div>
+          <div class="progress-track"><div id="workProgressBar" class="progress-fill"></div></div>
+        </div>
+
+        <div class="offwork-footer">
+          <div class="schedule-block"><span>今日工时</span><strong id="scheduleText">09:00 — 18:00</strong><small id="lunchText">午休 12:00 — 13:00</small></div>
+          <button id="miniBtn" class="button button-dark">
+            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M8 9h8M8 13h5"></path></svg>
+            迷你置顶模式
+          </button>
+        </div>
+      </article>
+
+      <article class="card salary-card">
+        <div class="card-heading">
+          <div class="heading-left">
+            <span class="feature-icon yellow-icon">
+              <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"></rect><path d="M16 11h5v4h-5a2 2 0 0 1 0-4zM6 6V4h12v2"></path></svg>
+            </span>
+            <h2>工资进账中</h2>
+          </div>
+          <button id="privacyBtn" class="small-icon-button" title="隐藏金额" aria-label="隐藏金额">
+            <svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+          </button>
+        </div>
+
+        <div class="salary-main">
+          <p>今日预计已挣</p>
+          <div class="salary-amount"><span>¥</span><strong id="salaryAmount">0.00</strong></div>
+          <div class="salary-live"><span class="live-dot"></span><span>每秒约</span><strong id="salaryRate">0.0000</strong><span>元</span></div>
+        </div>
+
+        <div class="reward-box">
+          <span id="rewardIcon" class="reward-icon">CO</span>
+          <div><small>小小成就感</small><strong id="rewardText">第一杯咖啡正在路上</strong></div>
+        </div>
+
+        <div class="salary-details">
+          <div><span>今日目标</span><strong id="dailySalary">¥0.00</strong></div>
+          <div><span>每分钟</span><strong id="minuteSalary">¥0.00</strong></div>
+        </div>
+        <p class="estimate-note">按月薪与工时估算，并非真实银行到账</p>
+      </article>
+    </section>
+
+    <section class="section-heading">
+      <div><h2>值得期待的每一天</h2><p>日子有盼头，打工有劲头</p></div>
+      <button id="addHolidayBtn" class="button button-light">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>添加期待
+      </button>
+    </section>
+    <section id="holidayGrid" class="holiday-grid"></section>
+
+    <section class="bottom-grid">
+      <article class="card quote-card">
+        <span class="quote-label">今日精神食粮</span>
+        <svg class="quote-mark" viewBox="0 0 40 32"><path d="M0 32V18C0 6 6 0 18 0v8c-6 0-9 3-9 8h9v16H0zm22 0V18C22 6 28 0 40 0v8c-6 0-9 3-9 8h9v16H22z"></path></svg>
+        <blockquote id="quoteText">工资是劳动的报酬，准时下班是对生活的尊重。</blockquote>
+        <div class="quote-footer"><span id="quoteAuthor">到点啦编辑部</span><button id="newQuoteBtn" class="text-button">换一句<svg viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M6 8a7 7 0 0 1 12-2l2 2M18 16a7 7 0 0 1-12 2l-2-2"></path></svg></button></div>
+      </article>
+
+      <article class="card toolbox-card">
+        <div><span class="quote-label">桌面小彩蛋</span><h3>上班也可以有点乐趣</h3></div>
+        <div class="tool-actions">
+          <button id="bossBtn" class="tool-button"><span class="tool-symbol">B</span><span><strong>老板来了</strong><small>一键切换认真工作界面</small></span><kbd>Ctrl Shift B</kbd></button>
+          <button id="celebrateBtn" class="tool-button"><span class="tool-symbol coral">GO</span><span><strong>提前快乐一下</strong><small>给努力的自己一场彩带雨</small></span><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></button>
+        </div>
+      </article>
+    </section>
+
+    <footer class="app-footer"><span>到点啦 · 工作是为了更好的生活</span><span>所有数据仅保存在本机</span></footer>
+  </main>
+
+  <section id="miniPanel" class="mini-panel" aria-label="迷你倒计时">
+    <div class="mini-top"><span id="miniStatus">搬砖进行中</span><button id="restoreMiniBtn" title="恢复完整窗口"><svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"></path></svg>恢复</button></div>
+    <p>距离下班还有</p>
+    <div id="miniCountdown" class="mini-countdown">00:00:00</div>
+    <div class="mini-bottom"><span>今日预计已挣</span><strong id="miniSalary">¥0.00</strong></div>
+    <div class="mini-progress"><div id="miniProgressBar"></div></div>
+  </section>
+
+  <dialog id="settingsModal" class="modal settings-modal">
+    <form id="settingsForm">
+      <div class="modal-header"><div><p>MAKE IT YOURS</p><h2>我的打工设定</h2></div><button type="button" class="modal-close" data-close="settingsModal" aria-label="关闭设置">×</button></div>
+      <div class="form-grid">
+        <label><span>税前月薪（元）</span><input id="monthlySalaryInput" type="number" min="1" step="100" required></label>
+        <label><span>每月计薪天数</span><input id="workDaysInput" type="number" min="0.5" max="31" step="0.25" required></label>
+        <label><span>上班时间</span><input id="workStartInput" type="time" required></label>
+        <label><span>下班时间</span><input id="workEndInput" type="time" required></label>
+        <label><span>午休开始</span><input id="lunchStartInput" type="time" required></label>
+        <label><span>午休结束</span><input id="lunchEndInput" type="time" required></label>
+        <label><span>每月发薪日</span><input id="paydayInput" type="number" min="1" max="31" required></label>
+      </div>
+      <fieldset class="weekday-field"><legend>每周工作日</legend><div id="weekdayInputs" class="weekday-inputs"></div></fieldset>
+      <p id="settingsError" class="form-error" role="alert"></p>
+      <div class="settings-note">工资按“月薪 ÷ 每月计薪天数 ÷ 每日计薪工时”估算，午休不计薪。实际收入请以工资单为准。</div>
+      <div class="modal-footer"><button id="resetSettingsBtn" type="button" class="button button-plain">恢复默认</button><div><button type="button" class="button button-light" data-close="settingsModal">取消</button><button type="submit" class="button button-dark">保存设置</button></div></div>
+    </form>
+  </dialog>
+
+  <dialog id="holidayModal" class="modal holiday-modal">
+    <form id="holidayForm">
+      <div class="modal-header"><div><p>SOMETHING TO LOOK FORWARD TO</p><h2>添加一个新盼头</h2></div><button type="button" class="modal-close" data-close="holidayModal" aria-label="关闭添加期待">×</button></div>
+      <label class="full-field"><span>期待什么</span><input id="holidayNameInput" type="text" maxlength="12" placeholder="例如：年假去旅行" required></label>
+      <label class="full-field"><span>哪一天</span><input id="holidayDateInput" type="date" required></label>
+      <label class="full-field"><span>类型</span><select id="holidayTypeInput"><option value="travel">旅行</option><option value="holiday">假期</option><option value="birthday">生日</option><option value="anniversary">纪念日</option></select></label>
+      <div class="modal-footer align-right"><button type="button" class="button button-light" data-close="holidayModal">取消</button><button type="submit" class="button button-dark">保存期待</button></div>
+    </form>
+  </dialog>
+
+  <section id="bossScreen" class="boss-screen" aria-label="工作界面">
+    <div class="boss-toolbar"><div><strong>Q4 项目进度复盘</strong><span>最后编辑：刚刚</span></div><button id="exitBossBtn">返回工具 <kbd>Esc</kbd></button></div>
+    <div class="report-summary"><div><span>本季度完成任务</span><strong>24</strong><small>较上季度 +12.5%</small></div><div><span>进行中项目</span><strong>6</strong><small>整体进度正常</small></div><div><span>本周已完成</span><strong>8</strong><small>完成率 88.9%</small></div></div>
+    <div class="report-content"><div class="report-chart"><h3>项目完成趋势</h3><div class="bar-chart"><div style="height:42%"><span>7月</span></div><div style="height:58%"><span>8月</span></div><div style="height:51%"><span>9月</span></div><div style="height:74%"><span>10月</span></div><div style="height:88%"><span>11月</span></div><div style="height:66%"><span>12月</span></div></div></div><table><thead><tr><th>工作事项</th><th>负责人</th><th>进度</th><th>状态</th></tr></thead><tbody><tr><td>核心模块开发</td><td>产品一组</td><td>92%</td><td>进行中</td></tr><tr><td>数据看板优化</td><td>产品二组</td><td>100%</td><td>已完成</td></tr><tr><td>回归测试</td><td>质量保障组</td><td>78%</td><td>进行中</td></tr><tr><td>文档整理</td><td>运营支持组</td><td>86%</td><td>进行中</td></tr></tbody></table></div>
+  </section>
+
+  <div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="logic.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>

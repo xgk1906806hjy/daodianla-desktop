@@ -1,0 +1,41 @@
+{
+  "name": "daodianla-desktop",
+  "version": "1.1.0",
+  "private": true,
+  "description": "一款有情绪价值的打工人桌面倒计时工具",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "check": "node --check main.js && node --check preload.js && node --check logic.js && node --check renderer.js && node --check tests/smoke-main.js",
+    "test": "node --test tests/logic.test.js",
+    "smoke": "electron tests/smoke-main.js",
+    "build": "electron-builder --win portable"
+  },
+  "build": {
+    "appId": "local.daodianla.desktop",
+    "productName": "到点啦",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "logic.js",
+      "renderer.js",
+      "index.html",
+      "styles.css",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "assets/icon.ico"
+    },
+    "portable": {
+      "artifactName": "到点啦-${version}-便携版.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0"
+  }
+}
