@@ -63,9 +63,9 @@
 
         <div class="offwork-footer">
           <div class="schedule-block"><span>今日工时</span><strong id="scheduleText">09:00 — 18:00</strong><small id="lunchText">午休 12:00 — 13:00</small></div>
-          <button id="miniBtn" class="button button-dark">
+          <button id="miniBtn" class="button button-dark" title="将下班倒计时和实时工资一起放进置顶小窗">
             <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M8 9h8M8 13h5"></path></svg>
-            迷你置顶模式
+            倒计时 + 工资置顶
           </button>
         </div>
       </article>
@@ -78,9 +78,15 @@
             </span>
             <h2>工资进账中</h2>
           </div>
-          <button id="privacyBtn" class="small-icon-button" title="隐藏金额" aria-label="隐藏金额">
-            <svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
-          </button>
+          <div class="salary-head-actions">
+            <button id="privacyBtn" class="small-icon-button" title="隐藏金额" aria-label="隐藏金额">
+              <svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>
+            </button>
+            <button id="salaryMiniBtn" class="mini-pin-button" title="倒计时和工资一起置顶" aria-label="倒计时和工资一起置顶">
+              <svg viewBox="0 0 24 24"><path d="M8 3h8l-1 5 3 3v2h-5v7l-1 1-1-1v-7H6v-2l3-3-1-5z"></path></svg>
+              <span>一起置顶</span>
+            </button>
+          </div>
         </div>
 
         <div class="salary-main">
@@ -110,19 +116,54 @@
     </section>
     <section id="holidayGrid" class="holiday-grid"></section>
 
-    <section class="bottom-grid">
-      <article class="card quote-card">
-        <span class="quote-label">今日精神食粮</span>
-        <svg class="quote-mark" viewBox="0 0 40 32"><path d="M0 32V18C0 6 6 0 18 0v8c-6 0-9 3-9 8h9v16H0zm22 0V18C22 6 28 0 40 0v8c-6 0-9 3-9 8h9v16H22z"></path></svg>
-        <blockquote id="quoteText">工资是劳动的报酬，准时下班是对生活的尊重。</blockquote>
-        <div class="quote-footer"><span id="quoteAuthor">到点啦编辑部</span><button id="newQuoteBtn" class="text-button">换一句<svg viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M6 8a7 7 0 0 1 12-2l2 2M18 16a7 7 0 0 1-12 2l-2-2"></path></svg></button></div>
+    <section class="section-heading slack-heading">
+      <div class="slack-heading-title"><h2>摸鱼补给站</h2><p>带薪休息，理直气壮</p></div>
+      <div class="quote-ticker">
+        <span class="quote-ticker-label">今日精神食粮</span>
+        <span id="quoteText">工资是劳动的报酬，准时下班是对生活的尊重。</span>
+        <button id="newQuoteBtn" class="quote-refresh">换一句</button>
+      </div>
+    </section>
+    <section class="slack-grid">
+      <article class="card slack-card slack-timer-card">
+        <div class="slack-card-head">
+          <div class="heading-left"><span class="slack-symbol green">摸</span><h2>摸鱼计时</h2></div>
+          <span id="slackLevel" class="slack-badge">摸鱼见习生</span>
+        </div>
+        <div class="slack-timer-row">
+          <strong id="slackTimer">00:00</strong>
+          <button id="slackToggleBtn" class="slack-toggle">开始摸鱼</button>
+        </div>
+        <div class="slack-meter"><div id="slackProgressBar"></div></div>
+        <div class="slack-meta"><span>今日累计 <strong id="slackTotal">不足 1 分钟</strong></span><span id="slackTip">小摸怡情</span></div>
       </article>
 
-      <article class="card toolbox-card">
-        <div><span class="quote-label">桌面小彩蛋</span><h3>上班也可以有点乐趣</h3></div>
-        <div class="tool-actions">
-          <button id="bossBtn" class="tool-button"><span class="tool-symbol">B</span><span><strong>老板来了</strong><small>一键切换认真工作界面</small></span><kbd>Ctrl Shift B</kbd></button>
-          <button id="celebrateBtn" class="tool-button"><span class="tool-symbol coral">GO</span><span><strong>提前快乐一下</strong><small>给努力的自己一场彩带雨</small></span><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg></button>
+      <article id="fortuneCard" class="card slack-card slack-luck-card">
+        <div class="slack-card-head">
+          <div class="heading-left"><span class="slack-symbol coral">签</span><h2>今日摸鱼签</h2></div>
+          <button id="fortuneBtn" class="text-button fortune-button">摇一签</button>
+        </div>
+        <div class="fortune-row">
+          <div class="fortune-col"><span>宜</span><strong id="fortuneYi">带薪发呆</strong></div>
+          <div class="fortune-col bad"><span>忌</span><strong id="fortuneJi">主动接活</strong></div>
+          <span id="fortuneGrade" class="fortune-grade">上上签</span>
+        </div>
+        <p id="fortuneNote" class="fortune-note">今天适合把待办清单往后挪一格。</p>
+      </article>
+
+      <article class="card slack-card slack-tools-card">
+        <div class="slack-card-head">
+          <div class="heading-left"><span class="slack-symbol blue">水</span><h2>带薪小动作</h2></div>
+          <span id="waterCount" class="water-count">0 / 8 杯</span>
+        </div>
+        <button id="waterBtn" class="water-row" title="打卡喝一杯水">
+          <span class="water-copy">今日续命水</span>
+          <span id="waterDots" class="water-dots"></span>
+          <span class="water-plus">+1</span>
+        </button>
+        <div class="mini-tool-row">
+          <button id="bossBtn" class="mini-tool boss-tool"><strong>老板来了</strong><kbd>Ctrl Shift B</kbd></button>
+          <button id="celebrateBtn" class="mini-tool party-tool"><strong>彩带雨</strong><span>提前快乐</span></button>
         </div>
       </article>
     </section>
@@ -130,11 +171,29 @@
     <footer class="app-footer"><span>到点啦 · 工作是为了更好的生活</span><span>所有数据仅保存在本机</span></footer>
   </main>
 
-  <section id="miniPanel" class="mini-panel" aria-label="迷你倒计时">
-    <div class="mini-top"><span id="miniStatus">搬砖进行中</span><button id="restoreMiniBtn" title="恢复完整窗口"><svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"></path></svg>恢复</button></div>
-    <p>距离下班还有</p>
-    <div id="miniCountdown" class="mini-countdown">00:00:00</div>
-    <div class="mini-bottom"><span>今日预计已挣</span><strong id="miniSalary">¥0.00</strong></div>
+  <section id="miniPanel" class="mini-panel" aria-label="倒计时和工资置顶小窗">
+    <div class="mini-top">
+      <div class="mini-status-group">
+        <span id="miniStatus">搬砖进行中</span>
+        <button id="miniPinToggle" class="mini-pin-toggle active" title="取消置顶" aria-label="切换窗口置顶">
+          <svg viewBox="0 0 24 24"><path d="M8 3h8l-1 5 3 3v2h-5v7l-1 1-1-1v-7H6v-2l3-3-1-5z"></path></svg>
+          <span id="miniPinState">置顶中</span>
+        </button>
+      </div>
+      <button id="restoreMiniBtn" class="mini-restore" title="恢复完整窗口"><svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"></path></svg>恢复</button>
+    </div>
+    <div class="mini-metrics">
+      <div class="mini-metric mini-countdown-block">
+        <p>距离下班还有</p>
+        <div id="miniCountdown" class="mini-countdown">00:00:00</div>
+      </div>
+      <span class="mini-metric-divider" aria-hidden="true"></span>
+      <div class="mini-metric mini-salary-block">
+        <p>今日预计已挣</p>
+        <div class="mini-salary-amount"><span>¥</span><strong id="miniSalaryBig">0.00</strong></div>
+        <div class="mini-salary-meta"><span class="live-dot"></span><span>每秒 +¥</span><strong id="miniSalaryRate">0.0000</strong></div>
+      </div>
+    </div>
     <div class="mini-progress"><div id="miniProgressBar"></div></div>
   </section>
 

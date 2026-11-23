@@ -79,3 +79,21 @@ test('非法午休与空工作日会被拦截', () => {
   assert.ok(L.validateSettings({ ...settings, weekdays: [] }));
   assert.equal(L.validateSettings(settings), '');
 });
+
+test('摸鱼段位随今日累计时间升级', () => {
+  assert.equal(L.getSlackLevel(0).name, '摸鱼见习生');
+  assert.equal(L.getSlackLevel(10 * 60).name, '摸鱼熟练工');
+  assert.equal(L.getSlackLevel(30 * 60).name, '摸鱼研究所所长');
+  assert.equal(L.getSlackLevel(60 * 60).name, '带薪休息大师');
+  assert.equal(L.getSlackLevel(120 * 60).name, '摸鱼传说');
+  assert.equal(L.getSlackLevel(7200).next, null);
+});
+
+test('摸鱼段位进度与计时格式正确', () => {
+  const level = L.getSlackLevel(20 * 60);
+  assert.equal(level.next.name, '摸鱼研究所所长');
+  assert.equal(level.remainingSeconds, 10 * 60);
+  assert.equal(level.progress, 0.5);
+  assert.equal(L.formatSlackClock(65), '01:05');
+  assert.equal(L.formatSlackClock(3661), '1:01:01');
+});

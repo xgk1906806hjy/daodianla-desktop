@@ -3,6 +3,8 @@ const L = window.PunchLogic;
 const SETTINGS_KEY = 'daodianla.settings.v1';
 const HOLIDAYS_KEY = 'daodianla.holidays.v1';
 const PRIVACY_KEY = 'daodianla.privacy.v1';
+const SLACK_KEY = 'daodianla.slack.v1';
+const FORTUNE_KEY = 'daodianla.fortune.v1';
 const DEFAULT_SETTINGS = {
   monthlySalary: 12000,
   workDaysPerMonth: 21.75,
@@ -27,6 +29,16 @@ const QUOTES = [
   ['别只盯着进度条，也看看窗外今天的天空。', '窗外观察员'],
   ['到点不是偷懒，是给明天的自己留一点电。', '准时下班协会']
 ];
+const FORTUNES = [
+  { grade: '上上签', yi: '带薪发呆', ji: '主动接活', note: '今天适合把待办清单往后挪一格，灵魂短暂离席也算充电。' },
+  { grade: '大吉签', yi: '慢速喝水', ji: '秒回消息', note: '把“收到”晚三分钟发送，世界不会停转。' },
+  { grade: '小吉签', yi: '窗边放空', ji: '无效加班', note: '今天的晚霞，比一页还没排好的 PPT 更值得多看两眼。' },
+  { grade: '稳签', yi: '准点收工', ji: '自我加戏', note: '做完分内事，不必顺手承包整个部门的情绪。' },
+  { grade: '锦鲤签', yi: '带薪散步', ji: '久坐不动', note: '去接一杯水，顺便把工位外的空气吸满。' },
+  { grade: '上签', yi: '关掉提醒', ji: '反复刷新', note: '专注摸鱼二十分钟，也是一种深度休息。' },
+  { grade: '平安签', yi: '整理桌面', ji: '打开新需求', note: '先把水杯摆正，再考虑拯救世界。' },
+  { grade: '快乐签', yi: '偷看工资', ji: '精神内耗', note: '金额藏起来也很可爱，快乐不用逐笔对账。' }
+];
 const HOLIDAY_STYLES = {
   weekend: { code: 'WK', color: '#e1ece3', ink: '#315b49' },
   newyear: { code: 'NY', color: '#f7dfd2', ink: '#b55434' },
@@ -45,6 +57,10 @@ let settings = loadSettings();
 let customHolidays = loadHolidays();
 let amountVisible = localStorage.getItem(PRIVACY_KEY) !== 'hidden';
 let quoteIndex = Math.floor(Math.random() * QUOTES.length);
+let slack = loadSlack();
+let dailyFortune = loadFortune();
+let lastSlackLevelIndex = -1;
+let lastSlackPersist = 0;
 let lastStatus = null;
 let toastTimer = null;
 let isMini = false;
@@ -73,6 +89,67 @@ function loadHolidays() {
 
 function saveHolidays() {
   localStorage.setItem(HOLIDAYS_KEY, JSON.stringify(customHolidays));
+}
+
+function freshSlack() {
+  return { date: formatInputDate(new Date()), seconds: 0, running: false, startedAt: null, water: 0 };
+}
+
+function loadSlack() {
+  const fallback = freshSlack();
+  try {
+    const saved = JSON.parse(localStorage.getItem(SLACK_KEY));
+    if (!saved || saved.date !== fallback.date) return fallback;
+    return {
+      date: fallback.date,
+      seconds: Number.isFinite(saved.seconds) ? Math.max(0, saved.seconds) : 0,
+      // 上次异常退出时只保留已记录的秒数，不在后台凭空累计。
+      running: false,
+      startedAt: null,
+      water: Math.min(8, Math.max(0, Number(saved.water) || 0))
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function saveSlack() {
+  localStorage.setItem(SLACK_KEY, JSON.stringify({
+    date: slack.date,
+    seconds: Math.round(slack.seconds),
+    running: slack.running,
+    startedAt: slack.startedAt,
+    water: slack.water
+  }));
+}
+
+function slackSeconds(nowMs = Date.now()) {
+  const session = slack.running && Number.isFinite(slack.startedAt) ? Math.max(0, nowMs - slack.startedAt) / 1000 : 0;
+  return slack.seconds + session;
+}
+
+function commitSlack(nowMs = Date.now()) {
+  if (slack.running && Number.isFinite(slack.startedAt)) {
+    slack.seconds = slackSeconds(nowMs);
+    slack.startedAt = nowMs;
+  }
+  slack.date = formatInputDate(new Date(nowMs));
+  saveSlack();
+}
+
+function loadFortune() {
+  const today = formatInputDate(new Date());
+  try {
+    const saved = JSON.parse(localStorage.getItem(FORTUNE_KEY));
+    if (saved && saved.date === today && Number.isInteger(saved.index) && saved.index >= 0 && saved.index < FORTUNES.length) {
+      return { date: today, index: saved.index };
+    }
+  } catch {
+    // 忽略损坏的本地数据，重新摇一签。
+  }
+  const next = { date: today, index: Math.floor(Math.random() * FORTUNES.length) };
+  localStorage.setItem(FORTUNE_KEY, JSON.stringify(next));
+  return next;
 }
 
 function escapeHtml(value) {
@@ -166,8 +243,10 @@ function renderSalary(snapshot, status) {
   setAmount('salaryRate', money(snapshot.salaryPerSecond, 4));
   setAmount('dailySalary', `¥${money(daily)}`);
   setAmount('minuteSalary', `¥${money(perMinute)}`);
-  setAmount('miniSalary', `¥${money(snapshot.todayAmount)}`);
+  setAmount('miniSalaryBig', money(snapshot.todayAmount));
+  setAmount('miniSalaryRate', money(snapshot.salaryPerSecond, 4));
   $('salaryAmount').classList.toggle('hidden-amount', !amountVisible);
+  $('miniSalaryBig').classList.toggle('hidden-amount', !amountVisible);
   $('privacyBtn').classList.toggle('active', !amountVisible);
   $('privacyBtn').title = amountVisible ? '隐藏金额' : '显示金额';
 
@@ -178,6 +257,10 @@ function renderSalary(snapshot, status) {
   } else {
     $('rewardText').textContent = `今天已赚到 ${(snapshot.todayAmount / 15).toFixed(1)} 杯咖啡`;
   }
+}
+
+function enterMini() {
+  if (!isMini) window.desktop?.toggleMini();
 }
 
 function holidayDateLabel(date) {
@@ -217,7 +300,55 @@ function renderHolidays(now) {
 
 function renderQuote() {
   $('quoteText').textContent = QUOTES[quoteIndex][0];
-  $('quoteAuthor').textContent = QUOTES[quoteIndex][1];
+  $('quoteText').title = `${QUOTES[quoteIndex][0]} —— ${QUOTES[quoteIndex][1]}`;
+}
+
+function renderSlack(nowMs = Date.now()) {
+  const seconds = slackSeconds(nowMs);
+  const level = L.getSlackLevel(seconds);
+  $('slackTimer').textContent = L.formatSlackClock(seconds);
+  $('slackTotal').textContent = seconds < 60 ? '不足 1 分钟' : `${Math.floor(seconds / 60)} 分钟`;
+  $('slackLevel').textContent = level.name;
+  $('slackProgressBar').style.width = `${Math.round(level.progress * 100)}%`;
+  $('slackTip').textContent = level.next ? `再摸 ${Math.max(1, Math.ceil(level.remainingSeconds / 60))} 分钟升级` : '已达最高段位';
+  $('slackToggleBtn').textContent = slack.running ? '结束摸鱼' : '开始摸鱼';
+  $('slackToggleBtn').classList.toggle('running', slack.running);
+  document.body.classList.toggle('slacking', slack.running);
+
+  if (lastSlackLevelIndex >= 0 && level.index > lastSlackLevelIndex) {
+    showToast(`摸鱼段位升级：${level.name}`);
+  }
+  lastSlackLevelIndex = level.index;
+}
+
+function renderWater() {
+  $('waterCount').textContent = `${slack.water} / 8 杯`;
+  $('waterDots').innerHTML = Array.from({ length: 8 }, (_, index) => `<i class="${index < slack.water ? 'done' : ''}"></i>`).join('');
+  $('waterBtn').classList.toggle('done', slack.water >= 8);
+}
+
+function renderFortune() {
+  const fortune = FORTUNES[dailyFortune.index];
+  $('fortuneYi').textContent = fortune.yi;
+  $('fortuneJi').textContent = fortune.ji;
+  $('fortuneGrade').textContent = fortune.grade;
+  $('fortuneNote').textContent = fortune.note;
+}
+
+function syncDailyState(now) {
+  const today = formatInputDate(now);
+  if (slack.date !== today) {
+    slack = freshSlack();
+    lastSlackLevelIndex = -1;
+    lastSlackPersist = 0;
+    saveSlack();
+    renderWater();
+  }
+  if (dailyFortune.date !== today) {
+    dailyFortune = { date: today, index: Math.floor(Math.random() * FORTUNES.length) };
+    localStorage.setItem(FORTUNE_KEY, JSON.stringify(dailyFortune));
+    renderFortune();
+  }
 }
 
 function celebrate() {
@@ -240,9 +371,16 @@ function tick() {
   const now = new Date();
   const status = L.getWorkStatus(now, settings);
   const snapshot = L.getSalarySnapshot(now, settings);
+  syncDailyState(now);
   renderDateAndWeek(now, status);
   renderOffwork(now, status, snapshot);
   renderSalary(snapshot, status);
+  renderSlack(now.getTime());
+
+  if (slack.running && now.getTime() - lastSlackPersist >= 5000) {
+    commitSlack(now.getTime());
+    lastSlackPersist = now.getTime();
+  }
 
   if (lastStatus && lastStatus !== 'after' && status === 'after') {
     celebrate();
@@ -283,8 +421,10 @@ function bindEvents() {
   $('maximizeBtn').addEventListener('click', () => window.desktop?.maximize());
   $('closeBtn').addEventListener('click', () => window.desktop?.close());
   $('pinBtn').addEventListener('click', () => window.desktop?.togglePin());
-  $('miniBtn').addEventListener('click', () => window.desktop?.toggleMini());
+  $('miniBtn').addEventListener('click', enterMini);
+  $('salaryMiniBtn').addEventListener('click', enterMini);
   $('restoreMiniBtn').addEventListener('click', () => window.desktop?.toggleMini());
+  $('miniPinToggle').addEventListener('click', () => window.desktop?.togglePin());
   $('settingsBtn').addEventListener('click', () => {
     fillSettingsForm(settings);
     $('settingsModal').showModal();
@@ -362,12 +502,63 @@ function bindEvents() {
     quoteIndex = (quoteIndex + 1 + Math.floor(Math.random() * (QUOTES.length - 1))) % QUOTES.length;
     renderQuote();
   });
+  $('slackToggleBtn').addEventListener('click', () => {
+    const nowMs = Date.now();
+    if (slack.running) {
+      commitSlack(nowMs);
+      slack.running = false;
+      slack.startedAt = null;
+      saveSlack();
+      lastSlackPersist = nowMs;
+      renderSlack(nowMs);
+      showToast(`本次摸鱼 ${L.formatSlackClock(slack.seconds)}，休息也是生产力`);
+    } else {
+      slack.running = true;
+      slack.startedAt = nowMs;
+      saveSlack();
+      lastSlackPersist = nowMs;
+      renderSlack(nowMs);
+      showToast('摸鱼计时开始，记得见好就收');
+    }
+  });
+  $('fortuneBtn').addEventListener('click', () => {
+    let nextIndex = dailyFortune.index;
+    while (nextIndex === dailyFortune.index) nextIndex = Math.floor(Math.random() * FORTUNES.length);
+    dailyFortune = { date: formatInputDate(new Date()), index: nextIndex };
+    localStorage.setItem(FORTUNE_KEY, JSON.stringify(dailyFortune));
+    renderFortune();
+    const card = $('fortuneCard');
+    card.classList.remove('drawing');
+    void card.offsetWidth;
+    card.classList.add('drawing');
+    setTimeout(() => card.classList.remove('drawing'), 420);
+    showToast('摸鱼签已更新，今天也要理直气壮地休息');
+  });
+  $('waterBtn').addEventListener('click', () => {
+    if (slack.water >= 8) {
+      showToast('今天 8 杯已达成，明天继续水灵灵');
+      return;
+    }
+    slack.water += 1;
+    saveSlack();
+    renderWater();
+    if (slack.water === 8) {
+      celebrate();
+      showToast('8 杯达成，今天的水灵灵冠军就是你');
+    } else {
+      showToast(`续命水 +1，今天第 ${slack.water} 杯`);
+    }
+  });
   $('celebrateBtn').addEventListener('click', () => {
     celebrate();
     showToast('今天的快乐已提前送达');
   });
   $('bossBtn').addEventListener('click', () => setBossMode(true));
   $('exitBossBtn').addEventListener('click', () => setBossMode(false));
+  window.addEventListener('pagehide', () => {
+    if (slack.running) commitSlack();
+    else saveSlack();
+  });
   document.addEventListener('keydown', (event) => {
     if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'b') {
       event.preventDefault();
@@ -384,7 +575,10 @@ function bindEvents() {
   window.desktop?.onPinChanged((value) => {
     $('pinBtn').classList.toggle('active', value);
     $('pinBtn').title = value ? '取消置顶' : '窗口置顶';
-    showToast(value ? '窗口已置顶' : '已取消置顶');
+    $('miniPinToggle').classList.toggle('active', value);
+    $('miniPinState').textContent = value ? '置顶中' : '未置顶';
+    $('miniPinToggle').title = value ? '取消置顶' : '窗口置顶';
+    showToast(value ? '倒计时和工资已置顶' : '已取消置顶');
   });
 }
 
@@ -392,6 +586,8 @@ buildWeekdayInputs();
 bindEvents();
 renderQuote();
 renderHolidays(new Date());
+renderWater();
+renderFortune();
 tick();
 setInterval(tick, 1000);
 setInterval(() => renderHolidays(new Date()), 60000);

@@ -153,6 +153,43 @@
     return Math.max(0, Math.round((startOfDay(target) - startOfDay(now)) / DAY_MS));
   }
 
+  const SLACK_LEVELS = [
+    { min: 0, name: '摸鱼见习生' },
+    { min: 10 * 60, name: '摸鱼熟练工' },
+    { min: 30 * 60, name: '摸鱼研究所所长' },
+    { min: 60 * 60, name: '带薪休息大师' },
+    { min: 120 * 60, name: '摸鱼传说' }
+  ];
+
+  function getSlackLevel(seconds) {
+    const safeSeconds = Math.max(0, Number(seconds) || 0);
+    let index = 0;
+    for (let cursor = 0; cursor < SLACK_LEVELS.length; cursor += 1) {
+      if (safeSeconds >= SLACK_LEVELS[cursor].min) index = cursor;
+    }
+    const current = SLACK_LEVELS[index];
+    const next = SLACK_LEVELS[index + 1] || null;
+    const span = next ? next.min - current.min : 1;
+    const progress = next ? Math.min(1, Math.max(0, (safeSeconds - current.min) / span)) : 1;
+    return {
+      index,
+      name: current.name,
+      next,
+      remainingSeconds: next ? Math.max(0, Math.ceil(next.min - safeSeconds)) : 0,
+      progress
+    };
+  }
+
+  function formatSlackClock(seconds) {
+    const total = Math.max(0, Math.floor(Number(seconds) || 0));
+    const hours = Math.floor(total / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const rest = total % 60;
+    return hours > 0
+      ? `${hours}:${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`
+      : `${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`;
+  }
+
   function validateSettings(settings) {
     const workStart = parseTime(settings.workStart);
     const workEnd = parseTime(settings.workEnd);
@@ -183,6 +220,8 @@
     getNextNewYear,
     getNextPayday,
     daysUntil,
+    getSlackLevel,
+    formatSlackClock,
     validateSettings
   };
 });

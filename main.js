@@ -5,6 +5,7 @@ let mainWindow = null;
 let normalBounds = null;
 let isMini = false;
 let isPinned = false;
+let miniPinned = true;
 
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) {
@@ -13,10 +14,10 @@ if (!gotSingleInstanceLock) {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 660,
-    minWidth: 820,
-    minHeight: 620,
+    width: 800,
+    height: 560,
+    minWidth: 780,
+    minHeight: 540,
     backgroundColor: '#f5f3ed',
     frame: false,
     show: false,
@@ -56,6 +57,12 @@ ipcMain.handle('window:maximize', () => {
 ipcMain.handle('window:close', () => mainWindow?.close());
 ipcMain.handle('window:toggle-pin', () => {
   if (!mainWindow) return false;
+  if (isMini) {
+    miniPinned = !mainWindow.isAlwaysOnTop();
+    mainWindow.setAlwaysOnTop(miniPinned);
+    sendWindowState('window:pin-changed', miniPinned);
+    return miniPinned;
+  }
   isPinned = !mainWindow.isAlwaysOnTop();
   mainWindow.setAlwaysOnTop(isPinned);
   sendWindowState('window:pin-changed', isPinned);
@@ -79,18 +86,22 @@ ipcMain.handle('window:toggle-mini', () => {
       display.workArea.y + display.workArea.height - height
     );
 
+    miniPinned = true;
     mainWindow.setMinimumSize(width, height);
     mainWindow.setResizable(false);
     mainWindow.setAlwaysOnTop(true);
     mainWindow.setBounds({ x, y, width, height });
   } else {
     mainWindow.setResizable(true);
-    mainWindow.setMinimumSize(980, 700);
+    mainWindow.setMinimumSize(780, 540);
     mainWindow.setAlwaysOnTop(isPinned);
     if (normalBounds) mainWindow.setBounds(normalBounds);
   }
 
-  setTimeout(() => sendWindowState('window:mini-changed', isMini), 80);
+  setTimeout(() => {
+    sendWindowState('window:mini-changed', isMini);
+    sendWindowState('window:pin-changed', isMini ? miniPinned : isPinned);
+  }, 80);
   return isMini;
 });
 ipcMain.on('app:notify', (_event, { title, body }) => {
